@@ -1,14 +1,14 @@
 import time
-import copy
 import torch
+from src.utils.models import save_model
+from tqdm import tqdm
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 def train(model, criterion, optimizer, scheduler, dataloaders,
-            dataset_sizes, start_epoch=0, end_epoch=100):    
+            dataset_sizes, writer, start_epoch=0, end_epoch=100):    
     since = time.time()
     
-    # best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
 
     for epoch in range(start_epoch, end_epoch):
@@ -26,8 +26,8 @@ def train(model, criterion, optimizer, scheduler, dataloaders,
             running_corrects = 0
 
             # Iterate over data
-            for sample in dataloaders[phase]:
-                inputs = sample['point']
+            for sample in tqdm(dataloaders[phase]):
+                inputs = sample['image']
                 labels = sample['label']
                 inputs = inputs.to(device)
                 labels = labels.to(device, dtype=torch.long)
@@ -43,7 +43,7 @@ def train(model, criterion, optimizer, scheduler, dataloaders,
                     # print(outputs)
                     # print(labels)
                     loss = criterion(outputs, labels)
-                    # writer.add_scalar(f"Loss/{phase}", loss, epoch)
+                    writer.add_scalar(f"Loss/{phase}", loss, epoch)
 
                     # backward + optimize only if in training phase
                     if phase == 'train':
@@ -58,14 +58,20 @@ def train(model, criterion, optimizer, scheduler, dataloaders,
 
             epoch_loss = running_loss / dataset_sizes[phase]
             epoch_acc = running_corrects.double() / dataset_sizes[phase]
-            # writer.add_scalar(f"Acc/{phase}", epoch_acc, epoch)
+            writer.add_scalar(f"Acc/{phase}", epoch_acc, epoch)
 
             print('{} Loss: {:.4f} Acc: {:.4f}'.format(
                 phase, epoch_loss, epoch_acc))
 
             # deep copy the model
             if phase == 'val' and epoch_acc > best_acc:
+                print("Saving checkpoint...")
+                save_model(
+                    model.state_dict(),
+                    f"checkpoints/ckpt{epoch_acc}_{best_acc:.4f}.pth"
+                    )
                 best_acc = epoch_acc
+
                 # best_model_wts = copy.deepcopy(model.state_dict())
 
         print()

@@ -131,3 +131,8 @@ dmypy.json
 # Tensorboard runs
 runs/*
 
+# Others
+.bash_history
+.local/*
+.python_history
+models/*

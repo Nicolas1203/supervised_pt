@@ -7,6 +7,8 @@ RUN pip install pandas
 RUN pip install sklearn
 RUN pip install matplotlib
 RUN pip install kneed
+RUN pip install tensorboard
+RUN pip install scikit-image
 RUN apt update && apt upgrade -y
 RUN apt install -y libwebp-dev
 # Not sure these steps are necessary for libwebp to be installed
