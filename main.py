@@ -13,15 +13,16 @@ import torch.nn as nn
 import torch.optim as optim
 import copy
 import argparse
+import sys
 
 from torch.optim import lr_scheduler
 from tqdm import tqdm
 from PIL import Image
 from skimage import io
 from src.train import train
-from src.utils.models import load_model
 from src.utils.tensorboard import get_writer
 from src.utils.data import get_loaders
+from src.utils.visualization import plot_confusion_matrix 
 
 
 parser = argparse.ArgumentParser(description="PyTorch supervised training code, with tensorboard visualisation")
@@ -39,30 +40,36 @@ parser.add_argument('--weight-decay', '--wd', default=1e-4, type=float,
                     metavar='W', help='weight decay (default: 1e-4)')
 parser.add_argument('--print-freq', '-p', default=10, type=int,
                     metavar='N', help='print frequency (default: 10)')
-parser.add_argument('--test-only', action='store_true', help='test only')
+parser.add_argument('--test-only', action='store_true', help='test only')   
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
-parser.add_argument('--nb-classes', '-c', type=int, default=1695,
+parser.add_argument('--nb-classes', '-nc', type=int, default=1695,
                     help='Number of classes for last layer')
+parser.add_argument('--classes', '-c', default='category', help='Classes to consider as ground truth: category or channel.')
 parser.add_argument('--tensorboard', '-tb', help="Name of the tensorboard graph.",
                     default='')
 parser.add_argument('--data-root-dir', default='/data/influencers/v1/',
                     help='Root dir containing the dataset to train on.')
+parser.add_argument('--annotations', '-a', default='annotations_ch.csv', 
+                    help="name of the csv containing data annotations.")
 parser.add_argument('--resume', '-r', default='',
                     help="Resume old training. Load model given as resume parameter")
-args = parser.parse_args()
+parser.add_argument('--train', '-t', action="store_true", help="Run the code in training mode.")
+parser.add_argument('--confusion-matrix', '-cm', action='store_true',
+                    help="Create and save the confusion matrix.")
+args =parser.parse_args()
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 def main():
     # Model definition
-    if len(args.resume) < 1:
-        model = models.resnet18(pretrained=True)
-        num_ftrs = model.fc.in_features
-        model.fc = nn.Linear(num_ftrs, args.nb_classes)
-    else:
-        model = load_model(args.resume)
+    model = models.resnet18(pretrained=True)
+    num_ftrs = model.fc.in_features
+    model.fc = nn.Linear(num_ftrs, args.nb_classes)
+    if len(args.resume) > 1:
+        print(f"Resuming model {args.resume}...")
+        model.load_state_dict(torch.load(args.resume))
     model = model.to(device)
 
     # Loss
@@ -75,24 +82,34 @@ def main():
     scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
     # Dataloaders and dataset sizes
-    dataloaders, dataset_sizes = get_loaders(args.data_root_dir, args.batch_size)
+    dataloaders, dataset_sizes = get_loaders(args.data_root_dir, args.annotations, args.batch_size)
 
     # tensorboard writer
     writer = get_writer(args.tensorboard)
     
     # Training
-    best_model = train(
-        model,
-        criterion,
-        optimizer,
-        scheduler,
-        dataloaders,
-        dataset_sizes,
-        writer,
-        start_epoch=args.start_epoch,
-        end_epoch=args.start_epoch + args.epochs
-        )
-    writer.flush()
+    if args.train:
+        best_model = train(
+            model,
+            criterion,
+            optimizer,
+            scheduler,
+            dataloaders,
+            dataset_sizes,
+            writer,
+            start_epoch=args.start_epoch,
+            end_epoch=args.start_epoch + args.epochs
+            )
+        writer.flush()
+        sys.exit(0)
+    if args.confusion_matrix:
+        plot_confusion_matrix(
+            model,
+            dataloaders['val'],
+            os.path.join(args.data_root_dir, args.annotations),
+            classes_name=args.classes
+            )
+        sys.exit(0)
     
 
 if __name__ == '__main__':
