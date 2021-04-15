@@ -2,6 +2,7 @@ import time
 import torch
 from src.utils.models import save_model
 from tqdm import tqdm
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
@@ -43,7 +44,6 @@ def train(model, criterion, optimizer, scheduler, dataloaders,
                     # print(outputs)
                     # print(labels)
                     loss = criterion(outputs, labels)
-                    writer.add_scalar(f"Loss/{phase}", loss, epoch)
 
                     # backward + optimize only if in training phase
                     if phase == 'train':
@@ -59,18 +59,19 @@ def train(model, criterion, optimizer, scheduler, dataloaders,
             epoch_loss = running_loss / dataset_sizes[phase]
             epoch_acc = running_corrects.double() / dataset_sizes[phase]
             writer.add_scalar(f"Acc/{phase}", epoch_acc, epoch)
+            writer.add_scalar(f"Loss/{phase}", epoch_loss, epoch)
 
             print('{} Loss: {:.4f} Acc: {:.4f}'.format(
                 phase, epoch_loss, epoch_acc))
 
             # deep copy the model
             if phase == 'val' and epoch_acc > best_acc:
+                best_acc = epoch_acc
                 print("Saving checkpoint...")
                 save_model(
                     model.state_dict(),
-                    f"checkpoints/ckpt{epoch_acc}_{best_acc:.4f}.pth"
+                    f"checkpoints/ckpt{epoch}_{best_acc:.4f}.pth"
                     )
-                best_acc = epoch_acc
 
                 # best_model_wts = copy.deepcopy(model.state_dict())
 

@@ -36,12 +36,13 @@ def get_transforms() -> None:
     return data_transforms
 
 
-def get_loaders(root_dir, batch_size):
+def get_loaders(root_dir, annotations_file, batch_size):
     """Initialize dataset loaders for custom datasets
 
     Args:
-        root_dir (str): Root dir containing images/ folder and annotations.csv
-        batch_size (int): Batch size for training
+        root_dir (str):             Root dir containing images/ folder and annotations.csv
+        annotations_file (str) :    Name of the csv containing annotations  
+        batch_size (int):           Batch size for training
 
     Returns:
         dict{dataloader_name:dataloader}, dict{dataset_name:dataset_size}
@@ -50,12 +51,12 @@ def get_loaders(root_dir, batch_size):
     datasets = {
         'train': YoutubeDataset(
         root_dir=os.path.join(root_dir, 'images/train/'),
-        csv_file=os.path.join(root_dir, 'annotations.csv'),
+        csv_file=os.path.join(root_dir, annotations_file),
         transform=data_transforms['train']
         ),
         'val': YoutubeDataset(
         root_dir=os.path.join(root_dir, 'images/test/'),
-        csv_file=os.path.join(root_dir, 'annotations.csv'),
+        csv_file=os.path.join(root_dir, annotations_file),
         transform=data_transforms['test']
         )
     }

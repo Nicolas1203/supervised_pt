@@ -8,6 +8,7 @@ RUN pip install sklearn
 RUN pip install matplotlib
 RUN pip install kneed
 RUN pip install tensorboard
+RUN pip install seaborn
 RUN pip install scikit-image
 RUN apt update && apt upgrade -y
 RUN apt install -y libwebp-dev
