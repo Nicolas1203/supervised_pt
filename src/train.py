@@ -67,13 +67,17 @@ def train(model, criterion, optimizer, scheduler, dataloaders,
             # deep copy the model
             if phase == 'val' and epoch_acc > best_acc:
                 best_acc = epoch_acc
+                print("Saving best model...")
+                save_model(
+                    model.state_dict(),
+                    f"checkpoints/ckpt_best_acc{best_acc:.3f}.pth"
+                    )
+            if not epoch % 10:
                 print("Saving checkpoint...")
                 save_model(
                     model.state_dict(),
-                    f"checkpoints/ckpt{epoch}_{best_acc:.4f}.pth"
+                    f"checkpoints/ckpt_{epoch}.pth"
                     )
-
-                # best_model_wts = copy.deepcopy(model.state_dict())
 
         print()
 
@@ -82,6 +86,4 @@ def train(model, criterion, optimizer, scheduler, dataloaders,
         time_elapsed // 60, time_elapsed % 60))
     print('Best val Acc: {:4f}'.format(best_acc))
 
-    # load best model weights
-    # model.load_state_dict(best_model_wts)
     return model
