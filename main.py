@@ -46,7 +46,7 @@ parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
 parser.add_argument('--nb-classes', '-nc', type=int, default=1695,
                     help='Number of classes for last layer')
 parser.add_argument('--classes', '-c', default='category', help='Classes to consider as ground truth: category or channel.',
-                    choices=['category, channel'])
+                    choices=['category', 'channel'])
 parser.add_argument('--tensorboard', '-tb', help="Name of the tensorboard graph.",
                     default='')
 parser.add_argument('--data-root-dir', default='/data/influencers/v1/',
