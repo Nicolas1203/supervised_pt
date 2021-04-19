@@ -45,7 +45,8 @@ parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
 parser.add_argument('--nb-classes', '-nc', type=int, default=1695,
                     help='Number of classes for last layer')
-parser.add_argument('--classes', '-c', default='category', help='Classes to consider as ground truth: category or channel.')
+parser.add_argument('--classes', '-c', default='category', help='Classes to consider as ground truth: category or channel.',
+                    choices=['category, channel'])
 parser.add_argument('--tensorboard', '-tb', help="Name of the tensorboard graph.",
                     default='')
 parser.add_argument('--data-root-dir', default='/data/influencers/v1/',
@@ -55,7 +56,7 @@ parser.add_argument('--annotations', '-a', default='annotations_ch.csv',
 parser.add_argument('--resume', '-r', default='',
                     help="Resume old training. Load model given as resume parameter")
 parser.add_argument('--train', '-t', action="store_true", help="Run the code in training mode.")
-parser.add_argument('--confusion-matrix', '-cm', action='store_true',
+parser.add_argument('--confusion-matrix', '-cm', default='',
                     help="Create and save the confusion matrix.")
 args =parser.parse_args()
 
@@ -102,12 +103,13 @@ def main():
             )
         writer.flush()
         sys.exit(0)
-    if args.confusion_matrix:
+    if len(args.confusion_matrix) > 1:
         plot_confusion_matrix(
             model,
             dataloaders['val'],
             os.path.join(args.data_root_dir, args.annotations),
-            classes_name=args.classes
+            classes_name=args.classes,
+            fig_name=args.confusion_matrix
             )
         sys.exit(0)
     
