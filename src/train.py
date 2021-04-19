@@ -7,7 +7,8 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 def train(model, criterion, optimizer, scheduler, dataloaders,
-            dataset_sizes, writer, start_epoch=0, end_epoch=100):    
+            dataset_sizes, writer, start_epoch=0, end_epoch=100,
+            save_freq=10):    
     since = time.time()
     
     best_acc = 0.0

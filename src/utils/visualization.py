@@ -20,6 +20,8 @@ def plot_confusion_matrix(
     ):
     y_pred = []
     y_true = []
+    # Model in evaluation mode
+    net.eval()
 
     # iterate over test data
     for sample in testloader:

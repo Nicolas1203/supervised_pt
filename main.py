@@ -58,6 +58,7 @@ parser.add_argument('--resume', '-r', default='',
 parser.add_argument('--train', '-t', action="store_true", help="Run the code in training mode.")
 parser.add_argument('--confusion-matrix', '-cm', default='',
                     help="Create and save the confusion matrix.")
+parser.add_argument('--save-freq', type=int, default=10, help='Frequency for saving models.')
 args =parser.parse_args()
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -99,7 +100,8 @@ def main():
             dataset_sizes,
             writer,
             start_epoch=args.start_epoch,
-            end_epoch=args.start_epoch + args.epochs
+            end_epoch=args.start_epoch + args.epochs,
+            save_freq=args.save_freq
             )
         writer.flush()
         sys.exit(0)
