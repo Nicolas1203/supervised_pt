@@ -23,8 +23,7 @@ from src.train import train
 from src.utils.tensorboard import get_writer
 from src.utils.data import get_loaders
 from src.utils.visualization import plot_confusion_matrix 
-from src.arch.LinearTransferred import LinearTransferred
-from src.arch.resnet import resnet18
+
 
 
 parser = argparse.ArgumentParser(description="PyTorch supervised training code, with tensorboard visualisation")
@@ -73,6 +72,9 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 def main():
     # Model definition
     if args.tf_contrastive:
+        from src.arch.LinearTransferred import LinearTransferred
+        from src.arch.resnet import resnet18
+        
         backbone = resnet18(low_dim=args.low_dim)
         backbone.load_state_dict(torch.load(args.encoder)["net"])
         model = LinearTransferred(backbone, args.low_dim, args.nb_classes)
