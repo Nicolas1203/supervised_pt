@@ -23,6 +23,8 @@ from src.train import train
 from src.utils.tensorboard import get_writer
 from src.utils.data import get_loaders
 from src.utils.visualization import plot_confusion_matrix 
+from src.arch.LinearTransferred import LinearTransferred
+from src.arch.resnet import resnet18
 
 
 parser = argparse.ArgumentParser(description="PyTorch supervised training code, with tensorboard visualisation")
@@ -59,6 +61,10 @@ parser.add_argument('--train', '-t', action="store_true", help="Run the code in 
 parser.add_argument('--confusion-matrix', '-cm', default='',
                     help="Create and save the confusion matrix.")
 parser.add_argument('--save-freq', type=int, default=10, help='Frequency for saving models.')
+parser.add_argument('--tf-contrastive', action='store_true', help='transfer learning from contrastive rep')
+parser.add_argument('--low-dim', type=int, default=128, help='Representation dimension for contrastive tf learning')
+parser.add_argument('--encoder', default='models/trained/contrastive.pth')
+parser.add_argument('--criterion', default='CE', choices=['CE', 'CEw'], help='Loss to use for training.')
 args =parser.parse_args()
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -66,6 +72,16 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def main():
     # Model definition
+    if args.tf_contrastive:
+        backbone = resnet18(low_dim=args.low_dim)
+        backbone.load_state_dict(torch.load(args.encoder)["net"])
+        model = LinearTransferred(backbone, args.low_dim, args.nb_classes)
+        # Freeze model pretrained wieghts
+        for param in model.parameters():
+            param.requires_grad = False
+        model.fc_out.weight.requires_grad = True
+        model.fc_out.bias.requires_grad = True
+
     model = models.resnet18(pretrained=True)
     num_ftrs = model.fc.in_features
     model.fc = nn.Linear(num_ftrs, args.nb_classes)
@@ -75,7 +91,15 @@ def main():
     model = model.to(device)
 
     # Loss
-    criterion = nn.CrossEntropyLoss()
+    if args.criterion == 'CE':
+        criterion = nn.CrossEntropyLoss()
+    elif args.criterion == 'CEw':
+        labels = pd.read_csv(os.path.join(args.data_root_dir, args.annotations))['label']
+        weights_np = (labels.value_counts().sort_index() / len(labels)) ** -1
+        weights_pt = torch.Tensor(weights_np).to(device)
+        criterion = nn.CrossEntropyLoss(weight=weights_pt)
+    else:
+        Warning("Invalid criterion.")
 
     # Optim
     optimizer = optim.Adam(model.parameters(), lr=args.lr)

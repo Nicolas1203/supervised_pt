@@ -73,7 +73,7 @@ def train(model, criterion, optimizer, scheduler, dataloaders,
                     model.state_dict(),
                     f"checkpoints/ckpt_best_acc{best_acc:.3f}.pth"
                     )
-            if not epoch % 10:
+            if not epoch % save_freq:
                 print("Saving checkpoint...")
                 save_model(
                     model.state_dict(),

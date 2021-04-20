@@ -5,7 +5,7 @@ from torchvision import transforms
 from src.datasets.YoutubeDataset import YoutubeDataset
 from torch.utils.data import DataLoader
 
-def get_transforms() -> None:
+def get_transforms():
     """Define image transformations for model training and inference
 
     Returns: None
@@ -21,7 +21,7 @@ def get_transforms() -> None:
         'val': transforms.Compose([
             # transforms.RandomResizedCrop(224),
             transforms.Resize((224,224)),
-            transforms.RandomHorizontalFlip(),
+            # transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ]),
