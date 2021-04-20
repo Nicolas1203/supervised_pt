@@ -49,6 +49,6 @@ def plot_confusion_matrix(
                         columns=[i for i in classes], dtype=int)
 
     plt.figure(figsize=(24, 14))
-    sn.heatmap(df_cm, annot=True)
+    sn.heatmap(df_cm, annot=True, fmt='g')
     plt.savefig(fig_name)
     print((np.array(y_true) == np.array(y_pred)).sum() / len(y_true))
