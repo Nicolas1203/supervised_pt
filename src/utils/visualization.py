@@ -43,10 +43,10 @@ def plot_confusion_matrix(
     # Build confusion matrix
     cf_matrix = confusion_matrix(y_true, y_pred)
     print(cf_matrix)
-    print(np.sum(cf_matrix))
     # df_cm = pd.DataFrame(cf_matrix/np.sum(cf_matrix), index=[i for i in classes],
                         # columns=[i for i in classes])
-    df_cm = pd.DataFrame(cf_matrix/np.sum(cf_matrix))
+    df_cm = pd.DataFrame(cf_matrix, index=[i for i in classes],
+                        columns=[i for i in classes])
 
     plt.figure(figsize=(24, 14))
     sn.heatmap(df_cm, annot=True)
