@@ -46,7 +46,7 @@ def plot_confusion_matrix(
     # df_cm = pd.DataFrame(cf_matrix/np.sum(cf_matrix), index=[i for i in classes],
                         # columns=[i for i in classes])
     df_cm = pd.DataFrame(cf_matrix, index=[i for i in classes],
-                        columns=[i for i in classes])
+                        columns=[i for i in classes], dtype=int)
 
     plt.figure(figsize=(24, 14))
     sn.heatmap(df_cm, annot=True)
