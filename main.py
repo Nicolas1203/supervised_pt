@@ -44,7 +44,7 @@ parser.add_argument('--print-freq', '-p', default=10, type=int,
 parser.add_argument('--test-only', action='store_true', help='test only')   
 parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
-parser.add_argument('--nb-classes', '-nc', type=int, default=1695,
+parser.add_argument('--nb-classes', '-nc', type=int, default=13,
                     help='Number of classes for last layer')
 parser.add_argument('--classes', '-c', default='category', help='Classes to consider as ground truth: category or channel.',
                     choices=['category', 'channel'])
@@ -52,7 +52,7 @@ parser.add_argument('--tensorboard', '-tb', help="Name of the tensorboard graph.
                     default='')
 parser.add_argument('--data-root-dir', default='/data/influencers/v1/',
                     help='Root dir containing the dataset to train on.')
-parser.add_argument('--annotations', '-a', default='annotations_ch.csv', 
+parser.add_argument('--annotations', '-a', default='annotations_cat.csv', 
                     help="name of the csv containing data annotations.")
 parser.add_argument('--resume', '-r', default='',
                     help="Resume old training. Load model given as resume parameter")
@@ -64,7 +64,10 @@ parser.add_argument('--tf-contrastive', action='store_true', help='transfer lear
 parser.add_argument('--low-dim', type=int, default=128, help='Representation dimension for contrastive tf learning')
 parser.add_argument('--encoder', default='models/trained/contrastive.pth')
 parser.add_argument('--criterion', default='CE', choices=['CE', 'CEw'], help='Loss to use for training.')
-args =parser.parse_args()
+parser.add_argument('--augment', dest="augment", action='store_true', help="Use image augmentation for training.")
+parser.add_argument('--no-augment', dest="augment", action="store_false", help="No image augmentation. Only resizing.")
+parser.set_defaults(augment=True)
+args=parser.parse_args()
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -74,7 +77,7 @@ def main():
     if args.tf_contrastive:
         from src.arch.LinearTransferred import LinearTransferred
         from src.arch.resnet import resnet18
-        
+
         backbone = resnet18(low_dim=args.low_dim)
         backbone.load_state_dict(torch.load(args.encoder)["net"])
         model = LinearTransferred(backbone, args.low_dim, args.nb_classes)
@@ -83,14 +86,14 @@ def main():
             param.requires_grad = False
         model.fc_out.weight.requires_grad = True
         model.fc_out.bias.requires_grad = True
-
-    model = models.resnet18(pretrained=True)
-    num_ftrs = model.fc.in_features
-    model.fc = nn.Linear(num_ftrs, args.nb_classes)
-    if len(args.resume) > 1:
-        print(f"Resuming model {args.resume}...")
-        model.load_state_dict(torch.load(args.resume))
-    model = model.to(device)
+    else:
+        model = models.resnet18(pretrained=True)
+        num_ftrs = model.fc.in_features
+        model.fc = nn.Linear(num_ftrs, args.nb_classes)
+        if len(args.resume) > 1:
+            print(f"Resuming model {args.resume}...")
+            model.load_state_dict(torch.load(args.resume))
+    model.to(device)
 
     # Loss
     if args.criterion == 'CE':
@@ -110,7 +113,7 @@ def main():
     scheduler = lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
 
     # Dataloaders and dataset sizes
-    dataloaders, dataset_sizes = get_loaders(args.data_root_dir, args.annotations, args.batch_size)
+    dataloaders, dataset_sizes = get_loaders(args.data_root_dir, args.annotations, args.batch_size, args.augment)
 
     # tensorboard writer
     writer = get_writer(args.tensorboard)

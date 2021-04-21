@@ -5,49 +5,73 @@ from torchvision import transforms
 from src.datasets.YoutubeDataset import YoutubeDataset
 from torch.utils.data import DataLoader
 
-def get_transforms():
+def get_transforms(augment=True):
     """Define image transformations for model training and inference
-
-    Returns: None
     """
-    data_transforms = {
-        'train': transforms.Compose([
-            # transforms.RandomResizedCrop(224),
-            transforms.Resize((224,224)),
-            # transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ]),
-        'val': transforms.Compose([
-            # transforms.RandomResizedCrop(224),
-            transforms.Resize((224,224)),
-            # transforms.RandomHorizontalFlip(),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ]),
-        'test': transforms.Compose([
-            transforms.Resize((224,224)),
-            # transforms.Resize(256),
-            # transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-        ]),
-    }
+    if augment:
+        data_transforms = {
+            'train': transforms.Compose([
+                transforms.RandomResizedCrop(224),
+                transforms.RandomHorizontalFlip(),
+                transforms.ColorJitter(brightness=0.1, contrast=0.2, saturation=0, hue=0),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ]),
+            'val': transforms.Compose([
+                # transforms.RandomResizedCrop(224),
+                transforms.Resize((224,224)),
+                # transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ]),
+            'test': transforms.Compose([
+                transforms.Resize((224,224)),
+                # transforms.Resize(256),
+                # transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ]),
+        }
+    else:
+        data_transforms = {
+            'train': transforms.Compose([
+                # transforms.RandomResizedCrop(224),
+                transforms.Resize((224,224)),
+                # transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ]),
+            'val': transforms.Compose([
+                # transforms.RandomResizedCrop(224),
+                transforms.Resize((224,224)),
+                # transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ]),
+            'test': transforms.Compose([
+                transforms.Resize((224,224)),
+                # transforms.Resize(256),
+                # transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            ]),
+        }
     return data_transforms
 
 
-def get_loaders(root_dir, annotations_file, batch_size):
+def get_loaders(root_dir, annotations_file, batch_size, augment=True):
     """Initialize dataset loaders for custom datasets
 
     Args:
         root_dir (str):             Root dir containing images/ folder and annotations.csv
         annotations_file (str) :    Name of the csv containing annotations  
         batch_size (int):           Batch size for training
+        augment (bool):             Whether to augment images for training
 
     Returns:
         dict{dataloader_name:dataloader}, dict{dataset_name:dataset_size}
     """
-    data_transforms = get_transforms()
+    data_transforms = get_transforms(augment)
     datasets = {
         'train': YoutubeDataset(
         root_dir=os.path.join(root_dir, 'images/train/'),
