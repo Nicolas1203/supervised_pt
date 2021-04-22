@@ -164,6 +164,7 @@ def resnet18(pretrained=False, **kwargs):
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet18']))
     return nn.DataParallel(model)
+    # return model
 
 
 def resnet34(pretrained=False, **kwargs):

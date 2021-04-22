@@ -60,7 +60,7 @@ parser.add_argument('--train', '-t', action="store_true", help="Run the code in 
 parser.add_argument('--confusion-matrix', '-cm', default='',
                     help="Create and save the confusion matrix.")
 parser.add_argument('--save-freq', type=int, default=10, help='Frequency for saving models.')
-parser.add_argument('--tf-contrastive', action='store_true', help='transfer learning from contrastive rep')
+parser.add_argument('--contrastive-tf', action='store_true', help='transfer learning from contrastive rep')
 parser.add_argument('--low-dim', type=int, default=128, help='Representation dimension for contrastive tf learning')
 parser.add_argument('--encoder', default='models/trained/contrastive.pth')
 parser.add_argument('--criterion', default='CE', choices=['CE', 'CEw'], help='Loss to use for training.')
@@ -74,7 +74,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 def main():
     # Model definition
-    if args.tf_contrastive:
+    if args.contrastive_tf:
         from src.arch.LinearTransferred import LinearTransferred
         from src.arch.resnet import resnet18
 
@@ -90,9 +90,11 @@ def main():
         model = models.resnet18(pretrained=True)
         num_ftrs = model.fc.in_features
         model.fc = nn.Linear(num_ftrs, args.nb_classes)
-        if len(args.resume) > 1:
-            print(f"Resuming model {args.resume}...")
-            model.load_state_dict(torch.load(args.resume))
+    
+    if len(args.resume) > 1:
+        print(f"Resuming model {args.resume}...")
+        model.load_state_dict(torch.load(args.resume))
+    
     model.to(device)
 
     # Loss
@@ -120,7 +122,7 @@ def main():
     
     # Training
     if args.train:
-        best_model = train(
+        train(
             model,
             criterion,
             optimizer,
@@ -131,7 +133,7 @@ def main():
             start_epoch=args.start_epoch,
             end_epoch=args.start_epoch + args.epochs,
             save_freq=args.save_freq
-            )
+        )
         writer.flush()
         sys.exit(0)
     if len(args.confusion_matrix) > 1:
